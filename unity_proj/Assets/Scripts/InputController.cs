@@ -43,15 +43,15 @@ public class InputController : MonoBehaviour
         listenThread = new Thread(Listen);
         listenThread.IsBackground = true;
         listenThread.Start();
-        Debug.Log("UDP Listener started on port " + port);
+        // Debug.Log("UDP Listener started on port " + port);
     }
 
 	float sign(float x) {
 		return (x < 0)?-1:1;
 	}
 
-	float apply_deadzone(float v) {
-	    return (Math.Abs(v) < 0.25) ? 0.0f : v*v*sign(v);
+	float apply_deadzone(float v, float dz = 0.25f) {
+	    return (Math.Abs(v) < dz) ? 0.0f : v*v*sign(v);
 	}
 
     private void Listen()
@@ -75,7 +75,7 @@ public class InputController : MonoBehaviour
 					msg.move_x = apply_deadzone(new_msg.move_x);
 					msg.move_y = apply_deadzone(new_msg.move_y);
 					msg.move_z = apply_deadzone(new_msg.move_z);
-					msg.turn = apply_deadzone(new_msg.turn);
+					msg.turn = apply_deadzone(new_msg.turn, 0.5f);
 
 					msg.boost_forward = new_msg.boost_forward;
 					msg.boost_backward = new_msg.boost_backward;

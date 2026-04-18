@@ -12,6 +12,7 @@ public class Move : MonoBehaviour
     public float yawSpeed = 120f;
 
     public InputController ic;
+	public bool keyboardInput = false;
 
     private Rigidbody rb;
     public Animator myAnimator;
@@ -29,23 +30,25 @@ public class Move : MonoBehaviour
 
     void FixedUpdate()
     {
+		float en = ((keyboardInput)?1.0f:0.0f);
+
         // -------- INPUT --------
-        float forward = Input.GetAxis("Vertical");
-        float yaw = Input.GetAxis("Horizontal");
+        float forward = Input.GetAxis("Vertical") * en;
+        float yaw = Input.GetAxis("Horizontal") * en;
 
         float up =
-            (Input.GetKey(KeyCode.K) ? 1f : 0f) -
-            (Input.GetKey(KeyCode.J) ? 1f : 0f);
+            ((Input.GetKey(KeyCode.K) ? 1f : 0f) -
+            (Input.GetKey(KeyCode.J) ? 1f : 0f)) * en;
 
         float right =
-            (Input.GetKey(KeyCode.E) ? 1f : 0f) -
-            (Input.GetKey(KeyCode.Q) ? 1f : 0f);
+            ((Input.GetKey(KeyCode.E) ? 1f : 0f) -
+            (Input.GetKey(KeyCode.Q) ? 1f : 0f)) * en;
 
         // -------- EXTERNAL INPUT (IC) --------
-		float boost = (Input.GetKey(KeyCode.LeftShift)?1.0f:0.0f);
+		float boost = (Input.GetKey(KeyCode.LeftShift)?1.0f:0.0f) * en;
         if (ic?.msg != null)
         {
-			boost += ((ic.msg.boost_forward)?1.0f:0.0f);
+			boost    = ((ic.msg.boost_forward)?1.0f:0.0f);
             forward += ic.msg.move_z;
             right   += ic.msg.move_x;
             up      += ic.msg.move_y;
@@ -56,7 +59,7 @@ public class Move : MonoBehaviour
 			// "hook"
 
 			bool wantsPunch =
-			    Input.GetKey(KeyCode.Space) ||
+			    (Input.GetKey(KeyCode.Space) && keyboardInput) ||
 			    ic.msg.punch_left == "uppercut" ||
 			    ic.msg.punch_left == "hook" ||
 			    ic.msg.punch_left == "direct" ||
