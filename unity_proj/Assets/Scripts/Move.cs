@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 [RequireComponent(typeof(Rigidbody))]
 public class Move : MonoBehaviour
@@ -52,7 +53,7 @@ public class Move : MonoBehaviour
             up      += ic.msg.move_y;
             yaw     += ic.msg.turn;
         }
-		if(forward != 0f) {
+		if(Math.Abs(forward) > 0.3f) {
 			cs = CharacterState.Flying;
             myAnimator.SetBool("isFlying", true);
 		}else {
