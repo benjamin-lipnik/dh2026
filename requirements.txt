@@ -1,0 +1,12 @@
+# Baseline (MediaPipe) + Luxonis (DepthAI) dependencies
+# Note: depthai-nodes may pull opencv-python-headless as a transitive dependency.
+# If camera preview windows stop working, run:
+#   pip uninstall -y opencv-python-headless
+#   pip install --force-reinstall opencv-python==4.10.0.84
+
+mediapipe==0.10.9
+numpy==2.4.4
+opencv-python==4.10.0.84
+
+depthai==3.0.0
+depthai-nodes==0.3.4
