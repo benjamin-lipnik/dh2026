@@ -15,13 +15,11 @@ public class Move : MonoBehaviour
 
     private Rigidbody rb;
     public Animator myAnimator;
+	public Transform body_low_origin;
+	public GameObject fireball;
 
-	public enum CharacterState
-	{
-	    Idle = 0,
-	    Flying
-	}
-	public CharacterState cs = CharacterState.Idle;
+	float nextPunchTime = 0f;
+	float punchCooldown = 0.4f; // seconds between punches (adjust)
 
     void Awake()
     {
@@ -40,8 +38,8 @@ public class Move : MonoBehaviour
             (Input.GetKey(KeyCode.J) ? 1f : 0f);
 
         float right =
-            (Input.GetKey(KeyCode.Q) ? 1f : 0f) -
-            (Input.GetKey(KeyCode.E) ? 1f : 0f);
+            (Input.GetKey(KeyCode.E) ? 1f : 0f) -
+            (Input.GetKey(KeyCode.Q) ? 1f : 0f);
 
         // -------- EXTERNAL INPUT (IC) --------
 		float boost = (Input.GetKey(KeyCode.LeftShift)?1.0f:0.0f);
@@ -52,12 +50,42 @@ public class Move : MonoBehaviour
             right   += ic.msg.move_x;
             up      += ic.msg.move_y;
             yaw     += ic.msg.turn;
+
+			// "uppercut"
+			// "direct"
+			// "hook"
+
+			bool wantsPunch =
+			    Input.GetKey(KeyCode.Space) ||
+			    ic.msg.punch_left == "uppercut" ||
+			    ic.msg.punch_left == "hook" ||
+			    ic.msg.punch_left == "direct" ||
+			    ic.msg.punch_right == "uppercut" ||
+			    ic.msg.punch_right == "hook" ||
+			    ic.msg.punch_right == "direct";
+
+			if (wantsPunch && Time.time >= nextPunchTime)
+			{
+			    nextPunchTime = Time.time + punchCooldown;
+
+			    ic.msg.punch_right = "null";
+			    ic.msg.punch_left = "null";
+
+			    myAnimator.SetTrigger("Punch");
+
+			    Vector3 fb_pos = transform.position + transform.forward * 2.0f + new Vector3(0, 1, 0);
+			    GameObject fb = GameObject.Instantiate(fireball, fb_pos, Quaternion.identity);
+
+			    Rigidbody r = fb.GetComponent<Rigidbody>();
+			    r.velocity = rb.velocity + transform.forward * 20;
+
+			    GameObject.Destroy(fb, 5);
+			}
+
         }
 		if(Math.Abs(forward) > 0.3f) {
-			cs = CharacterState.Flying;
             myAnimator.SetBool("isFlying", true);
 		}else {
-			cs = CharacterState.Idle;
             myAnimator.SetBool("isFlying", false);
 		}
 
@@ -67,12 +95,16 @@ public class Move : MonoBehaviour
 		// yaw     *= (1.0f + boost);
 
         // -------- MOVEMENT --------
+		Vector3 move_xy =
+			(transform.forward * forward) +
+       		(transform.right * right);
+
         Vector3 velocity =
-            (transform.forward * forward) * fwdSpeed +
-            (transform.right * right) * fwdSpeed +
+            move_xy* fwdSpeed +
             (transform.up * up) * upDownSpeed;
 
         rb.velocity = velocity;
+		body_low_origin.localRotation = Quaternion.Euler(0,-right*10, 0);
 
         // -------- ROTATION --------
         Vector3 torque = new Vector3(

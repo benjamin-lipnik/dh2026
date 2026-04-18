@@ -46,6 +46,14 @@ public class InputController : MonoBehaviour
         Debug.Log("UDP Listener started on port " + port);
     }
 
+	float sign(float x) {
+		return (x < 0)?-1:1;
+	}
+
+	float apply_deadzone(float v) {
+	    return (Math.Abs(v) < 0.25) ? 0.0f : v*v*sign(v);
+	}
+
     private void Listen()
     {
         IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, port);
@@ -60,8 +68,28 @@ public class InputController : MonoBehaviour
                 // Unity API must run on main thread, so we queue it
                 UnityMainThreadDispatcher.Enqueue(() =>
                 {
-                	msg = JsonUtility.FromJson<InputMessage>(message);
-					// Debug.Log(message);
+                	InputMessage new_msg = JsonUtility.FromJson<InputMessage>(message);
+
+					msg.t = new_msg.t;
+
+					msg.move_x = apply_deadzone(new_msg.move_x);
+					msg.move_y = apply_deadzone(new_msg.move_y);
+					msg.move_z = apply_deadzone(new_msg.move_z);
+					msg.turn = apply_deadzone(new_msg.turn);
+
+					msg.boost_forward = new_msg.boost_forward;
+					msg.boost_backward = new_msg.boost_backward;
+					msg.boost_armed = new_msg.boost_armed;
+					msg.boost_needs_guard = new_msg.boost_needs_guard;
+
+					if (new_msg.punch_left != "null")
+					{
+					    msg.punch_left = new_msg.punch_left;
+					}
+					if (new_msg.punch_right != "null")
+					{
+					    msg.punch_right = new_msg.punch_right;
+					}
                 });
             }
             catch
