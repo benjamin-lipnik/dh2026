@@ -80,6 +80,14 @@ Thumbs.db
 # =========================================================
 # Unity generated folders
 # =========================================================
+unity_proj/[Ll]ibrary/
+unity_proj/[Tt]emp/
+unity_proj/[Oo]bj/
+unity_proj/[Bb]uild/
+unity_proj/[Bb]uilds/
+unity_proj/[Ll]ogs/
+unity_proj/[Uu]ser[Ss]ettings/
+
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/

@@ -13,6 +13,7 @@ public class Move : MonoBehaviour
     public InputController ic;
 
     private Rigidbody rb;
+    public Animator myAnimator;
 
 	public enum CharacterState
 	{
@@ -53,8 +54,10 @@ public class Move : MonoBehaviour
         }
 		if(forward != 0f) {
 			cs = CharacterState.Flying;
+            myAnimator.SetBool("isFlying", true);
 		}else {
 			cs = CharacterState.Idle;
+            myAnimator.SetBool("isFlying", false);
 		}
 
 		forward *= (1.0f + boost);
