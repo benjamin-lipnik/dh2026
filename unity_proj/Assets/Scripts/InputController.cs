@@ -49,10 +49,30 @@ public class InputController : MonoBehaviour
 	float sign(float x) {
 		return (x < 0)?-1:1;
 	}
+	float clamp(float x, float min, float max) {
+		if(x<min)
+			return min;
+		if(x>max)
+			return max;
+		return x;
+	}
 
 	float apply_deadzone(float v, float dz = 0.25f) {
-	    return (Math.Abs(v) < dz) ? 0.0f : v*v*sign(v);
+		float ab = Math.Abs(v);
+		if(ab < dz) {
+			return 0.0f;
+		}
+		float q = (ab-dz) / (1.0f - dz);
+	    return clamp(q*q*sign(v), -1.0f, 1.0f);
 	}
+	// float apply_deadzone1(float v, float dz = 0.25f) {
+	// 	float ab = Math.Abs(v);
+	// 	if(ab < dz) {
+	// 		return 0.0f;
+	// 	}
+	// 	float q = (ab-dz) / (1.0f - dz);
+	//     return q*sign(v);
+	// }
 
     private void Listen()
     {
@@ -74,8 +94,8 @@ public class InputController : MonoBehaviour
 
 					msg.move_x = apply_deadzone(new_msg.move_x);
 					msg.move_y = apply_deadzone(new_msg.move_y);
-					msg.move_z = apply_deadzone(new_msg.move_z);
-					msg.turn = apply_deadzone(new_msg.turn, 0.5f);
+					msg.move_z = apply_deadzone(new_msg.move_z, 0.5f);
+					msg.turn = apply_deadzone(new_msg.turn*2.5f, 0.3f);
 
 					msg.boost_forward = new_msg.boost_forward;
 					msg.boost_backward = new_msg.boost_backward;
