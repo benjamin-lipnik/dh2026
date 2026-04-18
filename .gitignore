@@ -76,3 +76,93 @@ data_*/
 ############################
 .DS_Store
 Thumbs.db
+
+# =========================================================
+# Unity generated folders
+# =========================================================
+unity_proj/[Ll]ibrary/
+unity_proj/[Tt]emp/
+unity_proj/[Oo]bj/
+unity_proj/[Bb]uild/
+unity_proj/[Bb]uilds/
+unity_proj/[Ll]ogs/
+unity_proj/[Uu]ser[Ss]ettings/
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Memory Captures
+MemoryCaptures/
+
+# =========================================================
+# Asset Store tools
+# =========================================================
+[Aa]ssets/AssetStoreTools*
+
+# =========================================================
+# JetBrains Rider / IntelliJ
+# =========================================================
+.idea/
+*.sln.iml
+
+# =========================================================
+# Visual Studio / VS Code
+# =========================================================
+.vs/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+
+# Unity auto-generated project files (optional but common)
+*.csproj
+*.unityproj
+*.sln
+*.suo
+
+# =========================================================
+# OS generated
+# =========================================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# =========================================================
+# Builds
+# =========================================================
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+*.xcodeproj
+*.xcworkspace
+
+# =========================================================
+# Crash reports / caches
+# =========================================================
+sysinfo.txt
+
+# =========================================================
+# Addressables / build cache
+# =========================================================
+[Bb]uildCache/
+
+# =========================================================
+# Optional: ignore local packages cache
+# =========================================================
+Packages/packages-lock.json
