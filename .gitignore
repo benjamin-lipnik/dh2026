@@ -1,0 +1,78 @@
+############################
+# VIM swap / backup files
+############################
+*.swp
+*.swo
+*.swn
+*.swx
+*~
+.*.swp
+
+############################
+# Python
+############################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+.venv/
+ENV/
+env/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# IDEs
+.vscode/
+.idea/
+
+############################
+# Godot Engine
+############################
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# Godot Mono/C#
+.mono/
+data_*/
+
+# Exported binaries
+*.pck
+*.exe
+*.x86_64
+*.app
+*.apk
+*.ipa
+
+############################
+# OS files
+############################
+.DS_Store
+Thumbs.db
