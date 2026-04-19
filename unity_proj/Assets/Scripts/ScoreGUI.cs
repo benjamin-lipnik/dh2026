@@ -10,37 +10,37 @@ public class ScoreGUI : MonoBehaviour
 	{
 	    style = new GUIStyle();
 	    style.fontSize = 20;
-	    style.alignment = TextAnchor.MiddleCenter;
+	    // style.alignment = TextAnchor.MiddleCenter;
 	    style.normal.textColor = Color.white;
 	}
 
     void OnGUI()
-    {
-        float screenW = Screen.width;
-        float screenH = Screen.height;
+	{
+	    float screenW = Screen.width;
+	    float screenH = Screen.height;
 
-        float y = screenH * 0.1f;
-        float boxW = 200f;
-        float boxH = 50f;
+	    float y = 30f;
+	    float boxW = 250f;
+	    float boxH = 50f;
 
-        // -------- LEFT SCORE (1st quarter) --------
-        Rect leftRect = new Rect(
-            (screenW * 0.25f) - (boxW * 0.5f),
-            y,
-            boxW,
-            boxH
-        );
+	    // -------- LEFT SCORE (left-aligned on left side) --------
+	    Rect leftRect = new Rect(
+	        10f,   // small padding from left edge
+	        y,
+	        boxW,
+	        boxH
+	    );
 
-        GUI.Label(leftRect, scores[0].ToString(), style);
+	    GUI.Label(leftRect, "Score: " + scores[0].ToString(), style);
 
-        // -------- RIGHT SCORE (3rd quarter) --------
-        Rect rightRect = new Rect(
-            (screenW * 0.75f) - (boxW * 0.5f),
-            y,
-            boxW,
-            boxH
-        );
+	    // -------- RIGHT SCORE (left-aligned on right half) --------
+	    Rect rightRect = new Rect(
+	        (screenW * 0.5f) + 10f,  // start of right half + padding
+	        y,
+	        boxW,
+	        boxH
+	    );
 
-        GUI.Label(rightRect, scores[1].ToString(), style);
-    }
+	    GUI.Label(rightRect, "Score: " + scores[1].ToString(), style);
+	}
 }
