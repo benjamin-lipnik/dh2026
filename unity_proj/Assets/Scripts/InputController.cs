@@ -43,8 +43,36 @@ public class InputController : MonoBehaviour
         listenThread = new Thread(Listen);
         listenThread.IsBackground = true;
         listenThread.Start();
-        Debug.Log("UDP Listener started on port " + port);
+        // Debug.Log("UDP Listener started on port " + port);
     }
+
+	float sign(float x) {
+		return (x < 0)?-1:1;
+	}
+	float clamp(float x, float min, float max) {
+		if(x<min)
+			return min;
+		if(x>max)
+			return max;
+		return x;
+	}
+
+	float apply_deadzone(float v, float dz = 0.25f) {
+		float ab = Math.Abs(v);
+		if(ab < dz) {
+			return 0.0f;
+		}
+		float q = (ab-dz) / (1.0f - dz);
+	    return clamp(q*q*sign(v), -1.0f, 1.0f);
+	}
+	// float apply_deadzone1(float v, float dz = 0.25f) {
+	// 	float ab = Math.Abs(v);
+	// 	if(ab < dz) {
+	// 		return 0.0f;
+	// 	}
+	// 	float q = (ab-dz) / (1.0f - dz);
+	//     return q*sign(v);
+	// }
 
     private void Listen()
     {
@@ -60,8 +88,28 @@ public class InputController : MonoBehaviour
                 // Unity API must run on main thread, so we queue it
                 UnityMainThreadDispatcher.Enqueue(() =>
                 {
-                	msg = JsonUtility.FromJson<InputMessage>(message);
-					// Debug.Log(message);
+                	InputMessage new_msg = JsonUtility.FromJson<InputMessage>(message);
+
+					msg.t = new_msg.t;
+
+					msg.move_x = apply_deadzone(new_msg.move_x);
+					msg.move_y = apply_deadzone(new_msg.move_y);
+					msg.move_z = apply_deadzone(new_msg.move_z, 0.2f);
+					msg.turn = apply_deadzone(new_msg.turn*2.5f, 0.3f);
+
+					msg.boost_forward = new_msg.boost_forward;
+					msg.boost_backward = new_msg.boost_backward;
+					msg.boost_armed = new_msg.boost_armed;
+					msg.boost_needs_guard = new_msg.boost_needs_guard;
+
+					if (new_msg.punch_left != "null")
+					{
+					    msg.punch_left = new_msg.punch_left;
+					}
+					if (new_msg.punch_right != "null")
+					{
+					    msg.punch_right = new_msg.punch_right;
+					}
                 });
             }
             catch
