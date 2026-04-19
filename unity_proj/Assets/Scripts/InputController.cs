@@ -35,6 +35,8 @@ public class InputController : MonoBehaviour
     public int port = 55555;
 	public InputMessage msg = null;
 
+	private double lastMessageTime = 0;
+
     void Start()
     {
         udpClient = new UdpClient(port);
@@ -74,6 +76,28 @@ public class InputController : MonoBehaviour
 	//     return q*sign(v);
 	// }
 
+	void OnGUI()
+	{
+	    double now = Time.realtimeSinceStartup * 1000.0;
+	    double diff = now - lastMessageTime;
+
+	    bool connected = diff < 1000.0;
+
+	    GUIStyle style = new GUIStyle(GUI.skin.label);
+	    style.fontSize = 10;
+
+	    if (connected)
+	    {
+	        style.normal.textColor = Color.green;
+	        GUI.Label(new Rect(10, 10, 300, 30), "Controller Connected", style);
+	    }
+	    else
+	    {
+	        style.normal.textColor = Color.red;
+	        GUI.Label(new Rect(10, 10, 300, 30), "Controller Disconnected", style);
+	    }
+	}
+
     private void Listen()
     {
         IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, port);
@@ -89,6 +113,8 @@ public class InputController : MonoBehaviour
                 UnityMainThreadDispatcher.Enqueue(() =>
                 {
                 	InputMessage new_msg = JsonUtility.FromJson<InputMessage>(message);
+
+					lastMessageTime = Time.realtimeSinceStartup * 1000.0; // ms
 
 					msg.t = new_msg.t;
 
