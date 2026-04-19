@@ -148,6 +148,8 @@ def parse_args():
     parser.add_argument("--udp", action="store_true", help="Enable UDP output")
     parser.add_argument("--udp-host", default="192.168.31.217", help="UDP target host")
     parser.add_argument("--udp-port", type=int, default=55555, help="UDP target port")
+    parser.add_argument("--load-calibration", default=None, help="Load calibration JSON and skip calibration flow")
+    parser.add_argument("--save-calibration", default=None, help="Save calibration JSON after successful calibration")
     parser.add_argument(
         "--run-mode",
         choices=["normal", "udp-debug"],
@@ -178,6 +180,25 @@ def udp_sender(sock_obj, host, port, q, stop_evt, debug=False):
             if debug:
                 ts = time.strftime("%H:%M:%S")
                 print(f"[{ts}] UDP SEND ERROR -> {host}:{port} {exc}")
+
+
+def load_calibration_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_calibration_file(path, x_to_user, lean_to_user, neutral, extremes, gesture_cal):
+    payload = {
+        "x_to_user": float(x_to_user),
+        "lean_to_user": float(lean_to_user),
+        "neutral": {k: float(v) for k, v in neutral.items()},
+        "extremes": {k: float(v) for k, v in extremes.items()},
+        "gesture_cal": {k: float(v) for k, v in gesture_cal.items()},
+    }
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
 
 
 def build_pipeline(args):
@@ -328,6 +349,28 @@ def main():
 
     neutral = {}
     extremes = {}
+    gesture_cal = {
+        "neutral_wrist_span": 0.0,
+        "neutral_elbow_span": 0.0,
+        "neutral_l_elbow_wrist": 0.0,
+        "neutral_r_elbow_wrist": 0.0,
+        "forward_wrist_span": 0.0,
+        "backward_wrist_span": 0.0,
+    }
+
+    if args.load_calibration:
+        try:
+            cal = load_calibration_file(args.load_calibration)
+            x_to_user = float(cal["x_to_user"])
+            lean_to_user = float(cal["lean_to_user"])
+            neutral = {k: float(v) for k, v in cal["neutral"].items()}
+            extremes = {k: float(v) for k, v in cal["extremes"].items()}
+            for k in gesture_cal:
+                gesture_cal[k] = float(cal["gesture_cal"][k])
+            calibrated = True
+            print(f"Loaded calibration from {args.load_calibration}")
+        except Exception as exc:
+            raise SystemExit(f"Failed to load calibration file {args.load_calibration}: {exc}") from exc
 
     prev_t = time.time()
     smooth = {"x": 0.0, "y": 0.0, "z": 0.0, "turn": 0.0}
@@ -501,14 +544,12 @@ def main():
                             "turn": float(np.median(cal_data["turn_neutral"])),
                             "hands": float(np.median(cal_data["hands_neutral"])),
                         }
-                        gesture_cal = {
-                            "neutral_wrist_span": float(np.median(cal_data["neutral_wrist_span"])),
-                            "neutral_elbow_span": float(np.median(cal_data["neutral_elbow_span"])),
-                            "neutral_l_elbow_wrist": float(np.median(cal_data["neutral_l_elbow_wrist"])),
-                            "neutral_r_elbow_wrist": float(np.median(cal_data["neutral_r_elbow_wrist"])),
-                            "forward_wrist_span": float(np.median(cal_data["forward_wrist_span"])),
-                            "backward_wrist_span": float(np.median(cal_data["backward_wrist_span"])),
-                        }
+                        gesture_cal["neutral_wrist_span"] = float(np.median(cal_data["neutral_wrist_span"]))
+                        gesture_cal["neutral_elbow_span"] = float(np.median(cal_data["neutral_elbow_span"]))
+                        gesture_cal["neutral_l_elbow_wrist"] = float(np.median(cal_data["neutral_l_elbow_wrist"]))
+                        gesture_cal["neutral_r_elbow_wrist"] = float(np.median(cal_data["neutral_r_elbow_wrist"]))
+                        gesture_cal["forward_wrist_span"] = float(np.median(cal_data["forward_wrist_span"]))
+                        gesture_cal["backward_wrist_span"] = float(np.median(cal_data["backward_wrist_span"]))
 
                         if head_hi - head_lo < 0.04:
                             head_lo = neutral["head"] - 0.05
@@ -530,6 +571,19 @@ def main():
                         calibrated = True
                         side_text = "mirrored frame" if x_to_user > 0 else "non-mirrored frame"
                         print(f"\033[2J\033[HCalibration complete ({side_text}).")
+                        if args.save_calibration:
+                            try:
+                                save_calibration_file(
+                                    args.save_calibration,
+                                    x_to_user,
+                                    lean_to_user,
+                                    neutral,
+                                    extremes,
+                                    gesture_cal,
+                                )
+                                print(f"Saved calibration to {args.save_calibration}")
+                            except Exception as exc:
+                                print(f"Failed to save calibration to {args.save_calibration}: {exc}")
 
                 if now >= next_status_at:
                     ts = time.strftime("%H:%M:%S")
@@ -777,6 +831,24 @@ def main():
             prev["lfh"] = abs((lw - le)[0]) / (abs((lw - le)[0]) + abs((lw - le)[1]) + 1e-6)
             prev["rfh"] = abs((rw - re)[0]) / (abs((rw - re)[0]) + abs((rw - re)[1]) + 1e-6)
 
+            # Explicit punch channels for downstream controller mapping.
+            punch_flags = {
+                "punch_left_direct": punch_user_left == "direct",
+                "punch_left_hook": punch_user_left == "hook",
+                "punch_left_uppercut": punch_user_left == "uppercut",
+                "punch_right_direct": punch_user_right == "direct",
+                "punch_right_hook": punch_user_right == "hook",
+                "punch_right_uppercut": punch_user_right == "uppercut",
+            }
+            punch_latched_flags = {
+                "punch_left_direct_latched": last_punch_code["L"] == "D",
+                "punch_left_hook_latched": last_punch_code["L"] == "H",
+                "punch_left_uppercut_latched": last_punch_code["L"] == "U",
+                "punch_right_direct_latched": last_punch_code["R"] == "D",
+                "punch_right_hook_latched": last_punch_code["R"] == "H",
+                "punch_right_uppercut_latched": last_punch_code["R"] == "U",
+            }
+
             out = {
                 "t": round(now, 3),
                 "move_x": round(smooth["x"], 2),
@@ -789,6 +861,10 @@ def main():
                 "boost_needs_guard": boost_needs_guard,
                 "punch_left": punch_user_left,
                 "punch_right": punch_user_right,
+                "punch_left_code": last_punch_code["L"],
+                "punch_right_code": last_punch_code["R"],
+                **punch_flags,
+                **punch_latched_flags,
             }
 
             if send_udp and sock is not None:

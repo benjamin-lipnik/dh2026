@@ -4,6 +4,7 @@ import socket
 import queue
 import threading
 import argparse
+from pathlib import Path
 
 import cv2
 import mediapipe as mp
@@ -150,6 +151,8 @@ def parse_args():
     parser.add_argument("--udp", action="store_true", help="Enable UDP output")
     parser.add_argument("--udp-host", default="192.168.31.217", help="UDP target host")
     parser.add_argument("--udp-port", type=int, default=55555, help="UDP target port")
+    parser.add_argument("--load-calibration", default=None, help="Load calibration JSON and skip calibration flow")
+    parser.add_argument("--save-calibration", default=None, help="Save calibration JSON after successful calibration")
     parser.add_argument(
         "--run-mode",
         choices=["normal", "udp-debug"],
@@ -196,6 +199,25 @@ def udp_sender(sock_obj, host, port, q, stop_evt, debug=False):
                 print(f"[{ts}] UDP SEND ERROR -> {host}:{port} {exc}")
 
 
+def load_calibration_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_calibration_file(path, x_to_user, lean_to_user, neutral, extremes, gesture_cal):
+    payload = {
+        "x_to_user": float(x_to_user),
+        "lean_to_user": float(lean_to_user),
+        "neutral": {k: float(v) for k, v in neutral.items()},
+        "extremes": {k: float(v) for k, v in extremes.items()},
+        "gesture_cal": {k: float(v) for k, v in gesture_cal.items()},
+    }
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+
 if SEND_UDP:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setblocking(False)
@@ -216,6 +238,20 @@ gesture_cal = {
     "forward_wrist_span": 0.0,
     "backward_wrist_span": 0.0,
 }
+
+if ARGS.load_calibration:
+    try:
+        cal = load_calibration_file(ARGS.load_calibration)
+        x_to_user = float(cal["x_to_user"])
+        lean_to_user = float(cal["lean_to_user"])
+        neutral = {k: float(v) for k, v in cal["neutral"].items()}
+        extremes = {k: float(v) for k, v in cal["extremes"].items()}
+        for k in gesture_cal:
+            gesture_cal[k] = float(cal["gesture_cal"][k])
+        calibrated = True
+        print(f"Loaded calibration from {ARGS.load_calibration}")
+    except Exception as exc:
+        raise SystemExit(f"Failed to load calibration file {ARGS.load_calibration}: {exc}") from exc
 
 
 while True:
@@ -364,6 +400,19 @@ while True:
                 calibrated = True
                 side_text = "mirrored frame" if x_to_user > 0 else "non-mirrored frame"
                 print(f"\033[2J\033[HCalibration complete ({side_text}).")
+                if ARGS.save_calibration:
+                    try:
+                        save_calibration_file(
+                            ARGS.save_calibration,
+                            x_to_user,
+                            lean_to_user,
+                            neutral,
+                            extremes,
+                            gesture_cal,
+                        )
+                        print(f"Saved calibration to {ARGS.save_calibration}")
+                    except Exception as exc:
+                        print(f"Failed to save calibration to {ARGS.save_calibration}: {exc}")
 
         if now >= next_status_at:
             ts = time.strftime("%H:%M:%S")
@@ -607,6 +656,24 @@ while True:
     prev["lfh"] = abs((lw - le)[0]) / (abs((lw - le)[0]) + abs((lw - le)[1]) + 1e-6)
     prev["rfh"] = abs((rw - re)[0]) / (abs((rw - re)[0]) + abs((rw - re)[1]) + 1e-6)
 
+    # Explicit punch channels for downstream controller mapping.
+    punch_flags = {
+        "punch_left_direct": punch_user_left == "direct",
+        "punch_left_hook": punch_user_left == "hook",
+        "punch_left_uppercut": punch_user_left == "uppercut",
+        "punch_right_direct": punch_user_right == "direct",
+        "punch_right_hook": punch_user_right == "hook",
+        "punch_right_uppercut": punch_user_right == "uppercut",
+    }
+    punch_latched_flags = {
+        "punch_left_direct_latched": last_punch_code["L"] == "D",
+        "punch_left_hook_latched": last_punch_code["L"] == "H",
+        "punch_left_uppercut_latched": last_punch_code["L"] == "U",
+        "punch_right_direct_latched": last_punch_code["R"] == "D",
+        "punch_right_hook_latched": last_punch_code["R"] == "H",
+        "punch_right_uppercut_latched": last_punch_code["R"] == "U",
+    }
+
     out = {
         "t": round(now, 3),
         "move_x": round(smooth["x"], 2),
@@ -619,6 +686,10 @@ while True:
         "boost_needs_guard": boost_needs_guard,
         "punch_left": punch_user_left,
         "punch_right": punch_user_right,
+        "punch_left_code": last_punch_code["L"],
+        "punch_right_code": last_punch_code["R"],
+        **punch_flags,
+        **punch_latched_flags,
     }
 
     if SEND_UDP and sock is not None:
