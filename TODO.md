@@ -4,7 +4,7 @@
 - [ ] User interface
 - [ ] Readme
 - [ ] Luafat lokalno
-- [ ] Aimbot
+- [x] Aimbot
 - [ ] Točke
 - [ ] Ob udarcu izklopic controliranje dokler player ne pokaze stop gestura
 - [ ] Particle effects

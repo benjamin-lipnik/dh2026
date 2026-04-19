@@ -32,6 +32,22 @@ public class Move : MonoBehaviour
 	public float aimAssistBaseUp  = 0.01f;    // how fast it adjusts vertical movement0
 	public float coastStrength = 0.5f; // tweak this
 
+	public float hitStrength = 3.0f;
+
+	public Move opponent_logic;
+	public DoHit dh;
+	bool been_hit = false;
+	float score = 0f;
+	public int playerIndex = 0;
+	public ScoreGUI scgui;
+
+	public void takeHit(Vector3 hit_vector) {
+		// Debug.Log("Been hit");
+		been_hit = true;
+		// rb.velocity = Vector3.zero;
+		rb.velocity = hit_vector;
+	}
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -47,6 +63,10 @@ public class Move : MonoBehaviour
 		if(x>max)
 			return max;
 		return x;
+	}
+
+	float randy_val(float a, float b) {
+		return UnityEngine.Random.Range(a, b);
 	}
 
     void FixedUpdate()
@@ -75,6 +95,10 @@ public class Move : MonoBehaviour
             up      += ic.msg.move_y;
             yaw     += ic.msg.turn;
 
+			if(ic.msg.boost_backward) {
+				been_hit = false;
+			}
+
 			// "uppercut"
 			// "direct"
 			// "hook"
@@ -96,14 +120,18 @@ public class Move : MonoBehaviour
 			    ic.msg.punch_left = "null";
 
 			    myAnimator.SetTrigger("Punch");
+				if(dh.opponent_in_range) {
+					opponent_logic.takeHit((transform.forward).normalized * hitStrength);
+					score += randy_val(80,120);
+					scgui.scores[playerIndex] = (int)score;
+				}
 
-			    Vector3 fb_pos = transform.position + transform.forward + new Vector3(0, 1.0f, 0);
-			    GameObject fb = GameObject.Instantiate(fireball, fb_pos, Quaternion.identity);
-				Fireball fbs = fb.GetComponent<Fireball>();
-				fbs.skip_collisions = myCollider;
-
-			    Rigidbody r = fb.GetComponent<Rigidbody>();
-			    r.velocity = rb.velocity + transform.forward * 10;
+			    // Vector3 fb_pos = transform.position + transform.forward + new Vector3(0, 1.0f, 0);
+			    // GameObject fb = GameObject.Instantiate(fireball, fb_pos, Quaternion.identity);
+				// Fireball fbs = fb.GetComponent<Fireball>();
+				// fbs.skip_collisions = myCollider;
+			    // Rigidbody r = fb.GetComponent<Rigidbody>();
+			    // r.velocity = rb.velocity + transform.forward * 10;
 			}
 
         }
@@ -169,7 +197,6 @@ public class Move : MonoBehaviour
             move_xy* fwdSpeed +
             (transform.up * up) * upDownSpeed;
 
-        rb.velocity = velocity;
 		body_low_origin.localRotation = Quaternion.Euler(0,-right*10, 0);
 
         // -------- ROTATION --------
@@ -179,6 +206,9 @@ public class Move : MonoBehaviour
             0f
         );
 
-        rb.angularVelocity = torque * Time.fixedDeltaTime;
+		if(!been_hit) {
+        	rb.velocity = velocity;
+        	rb.angularVelocity = torque * Time.fixedDeltaTime;
+		}
     }
 }
