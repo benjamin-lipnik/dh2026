@@ -39,6 +39,18 @@ Run from `input_system` folder:
 python input_system.py --udp
 ```
 
+Run from repository root (laptop camera -> localhost:55555):
+
+```powershell
+c:/Users/blin/Documents/dh2026/.venv/Scripts/python.exe input_system/input_system.py --udp --udp-host 127.0.0.1 --udp-port 55555
+```
+
+Run from repository root with baseline calibration load:
+
+```powershell
+c:/Users/blin/Documents/dh2026/.venv/Scripts/python.exe input_system/input_system.py --udp --udp-host 127.0.0.1 --udp-port 55555 --load-calibration input_system/calibration_baseline.json
+```
+
 Optional arguments:
 
 - `--udp-host 192.168.31.217`
