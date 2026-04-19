@@ -40,12 +40,15 @@ public class Move : MonoBehaviour
 	float score = 0f;
 	public int playerIndex = 0;
 	public ScoreGUI scgui;
+	public GameObject particles;
 
 	public void takeHit(Vector3 hit_vector) {
 		// Debug.Log("Been hit");
 		been_hit = true;
 		// rb.velocity = Vector3.zero;
 		rb.velocity = hit_vector;
+		GameObject p = GameObject.Instantiate(particles, transform.position, Quaternion.identity);
+		Destroy(p, 3);
 	}
 
     void Awake()
@@ -209,6 +212,10 @@ public class Move : MonoBehaviour
 		if(!been_hit) {
         	rb.velocity = velocity;
         	rb.angularVelocity = torque * Time.fixedDeltaTime;
+		}else {
+			if(rb.velocity.magnitude < 3f) {
+				been_hit = false;
+			}
 		}
     }
 }

@@ -5,7 +5,7 @@
 - [ ] Readme
 - [ ] Luafat lokalno
 - [x] Aimbot
-- [ ] Točke
-- [ ] Ob udarcu izklopic controliranje dokler player ne pokaze stop gestura
-- [ ] Particle effects
+- [x] Točke
+- [x] Ob udarcu izklopic controliranje dokler player ne pokaze stop gestura
+- [x] Particle effects
 - [ ] Skybox

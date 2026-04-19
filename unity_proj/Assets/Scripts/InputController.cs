@@ -94,7 +94,7 @@ public class InputController : MonoBehaviour
 
 					msg.move_x = apply_deadzone(new_msg.move_x);
 					msg.move_y = apply_deadzone(new_msg.move_y);
-					msg.move_z = apply_deadzone(new_msg.move_z, 0.5f);
+					msg.move_z = apply_deadzone(new_msg.move_z, 0.2f);
 					msg.turn = apply_deadzone(new_msg.turn*2.5f, 0.3f);
 
 					msg.boost_forward = new_msg.boost_forward;
