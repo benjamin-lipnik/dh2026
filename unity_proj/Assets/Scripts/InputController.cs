@@ -36,6 +36,7 @@ public class InputController : MonoBehaviour
 	public InputMessage msg = null;
 
 	private double lastMessageTime = 0;
+	public int PlayerIndex = 0;
 
     void Start()
     {
@@ -86,15 +87,17 @@ public class InputController : MonoBehaviour
 	    GUIStyle style = new GUIStyle(GUI.skin.label);
 	    style.fontSize = 10;
 
+		float halfWidth = Screen.width * 0.5f;
+		float offset = PlayerIndex * halfWidth;
 	    if (connected)
 	    {
 	        style.normal.textColor = Color.green;
-	        GUI.Label(new Rect(10, 10, 300, 30), "Controller Connected", style);
+	        GUI.Label(new Rect(10 + offset, 10, 300, 30), "Controller Connected", style);
 	    }
 	    else
 	    {
 	        style.normal.textColor = Color.red;
-	        GUI.Label(new Rect(10, 10, 300, 30), "Controller Disconnected", style);
+	        GUI.Label(new Rect(10 + offset, 10, 300, 30), "Controller Disconnected", style);
 	    }
 	}
 
