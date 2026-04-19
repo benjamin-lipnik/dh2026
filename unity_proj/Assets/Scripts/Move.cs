@@ -18,15 +18,36 @@ public class Move : MonoBehaviour
     public Animator myAnimator;
 	public Transform body_low_origin;
 	public GameObject fireball;
+	public Transform opponent;
+	public Transform origin;
+	public Collider myCollider;
 
 	float nextPunchTime = 0f;
 	float punchCooldown = 0.4f; // seconds between punches (adjust)
+
+	[Header("Aim Assist")]
+	public float aimAssistDrop = 3f;
+	public float aimAssistStrength = 0.001f;   // how fast it rotates toward enemy
+	public float aimAssistBaseYaw = 0.001f;   // how fast it rotates toward enemy
+	public float aimAssistBaseUp  = 0.01f;    // how fast it adjusts vertical movement0
+	public float coastStrength = 0.5f; // tweak this
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
     }
+
+	float sign(float x) {
+		return (x < 0)?-1:1;
+	}
+	float clamp(float x, float min, float max) {
+		if(x<min)
+			return min;
+		if(x>max)
+			return max;
+		return x;
+	}
 
     void FixedUpdate()
     {
@@ -76,13 +97,13 @@ public class Move : MonoBehaviour
 
 			    myAnimator.SetTrigger("Punch");
 
-			    Vector3 fb_pos = transform.position + transform.forward * 2.0f + new Vector3(0, 1, 0);
+			    Vector3 fb_pos = transform.position + transform.forward + new Vector3(0, 1.0f, 0);
 			    GameObject fb = GameObject.Instantiate(fireball, fb_pos, Quaternion.identity);
+				Fireball fbs = fb.GetComponent<Fireball>();
+				fbs.skip_collisions = myCollider;
 
 			    Rigidbody r = fb.GetComponent<Rigidbody>();
-			    r.velocity = rb.velocity + transform.forward * 20;
-
-			    GameObject.Destroy(fb, 5);
+			    r.velocity = rb.velocity + transform.forward * 10;
 			}
 
         }
@@ -92,10 +113,52 @@ public class Move : MonoBehaviour
             myAnimator.SetBool("isFlying", false);
 		}
 
-		forward *= (1.0f + boost);
-		right   *= (1.0f + boost);
-		up      *= (1.0f + boost);
+		// forward *= (1.0f + boost);
+		// right   *= (1.0f + boost);
+		// up      *= (1.0f + boost);
 		// yaw     *= (1.0f + boost);
+
+		if(opponent != null)
+		{
+		    Vector3 toOpponent = opponent.position - transform.position;
+		    Vector3 dir = toOpponent.normalized;
+		    Vector3 fforward = transform.forward;
+
+			// float strength = aimAssistStrength / Mathf.Pow(toOpponent.magnitude, aimAssistDrop);
+			float strength = aimAssistStrength / Mathf.Pow(toOpponent.magnitude, aimAssistDrop);
+
+		    // signed angle around Y axis
+		    float angle = Vector3.SignedAngle(fforward, dir, Vector3.up);
+			if(Math.Abs(angle) < 10f) {
+				angle = 0;
+			}
+		    yaw += angle * 0.001f * aimAssistBaseYaw * strength;
+
+		    float verticalDiff = toOpponent.y;
+		    up += verticalDiff * aimAssistBaseUp * strength;
+		}
+
+		if(origin != null)
+		{
+		    Vector3 toOrigin = origin.position - transform.position;
+
+		    // Normalize so it only gives direction
+		    Vector3 dir = toOrigin.normalized;
+
+		    // -------- CONVERT TO LOCAL AXES --------
+		    float forwardAssist = Vector3.Dot(dir, transform.forward);
+		    float rightAssist   = Vector3.Dot(dir, transform.right);
+		    float upAssist      = Vector3.Dot(dir, transform.up);
+
+		    // -------- APPLY SOFT COASTING --------
+		    forward += forwardAssist * coastStrength;
+		    right   += rightAssist   * coastStrength;
+		    up      += upAssist      * coastStrength;
+		}
+
+		right = clamp(right, -1f, 1f);
+		up = clamp(up, -1f, 1f);
+		yaw = clamp(yaw, -1f, 1f);
 
         // -------- MOVEMENT --------
 		Vector3 move_xy =

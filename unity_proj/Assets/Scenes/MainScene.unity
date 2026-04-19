@@ -197,8 +197,8 @@ CapsuleCollider:
   m_Material: {fileID: 13400000, guid: 5cff96ac2431425518960dde96f904bf, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 1.04
-  m_Height: 2
+  m_Radius: 0.4
+  m_Height: 1.7
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: -0.81}
 --- !u!23 &390327205
@@ -694,6 +694,14 @@ MonoBehaviour:
   body_low_origin: {fileID: 1521412576}
   fireball: {fileID: 7580458400338441314, guid: 6186f3d8b734df5639077152106c8a4d,
     type: 3}
+  opponent: {fileID: 971574627}
+  origin: {fileID: 831346883}
+  myCollider: {fileID: 390327204}
+  aimAssistDrop: 2
+  aimAssistStrength: 10000
+  aimAssistBaseYaw: 0.005
+  aimAssistBaseUp: 0.0001
+  coastStrength: 0.1
 --- !u!4 &899867579
 Transform:
   m_ObjectHideFlags: 0
@@ -981,6 +989,14 @@ MonoBehaviour:
   body_low_origin: {fileID: 24388861}
   fireball: {fileID: 7580458400338441314, guid: 6186f3d8b734df5639077152106c8a4d,
     type: 3}
+  opponent: {fileID: 899867579}
+  origin: {fileID: 831346883}
+  myCollider: {fileID: 1478754499}
+  aimAssistDrop: 2
+  aimAssistStrength: 10000
+  aimAssistBaseYaw: 0.005
+  aimAssistBaseUp: 0.0001
+  coastStrength: 0.1
 --- !u!54 &971574629
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1243,8 +1259,8 @@ CapsuleCollider:
   m_Material: {fileID: 13400000, guid: 5cff96ac2431425518960dde96f904bf, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 1.04
-  m_Height: 2
+  m_Radius: 0.4
+  m_Height: 1.7
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: -0.81}
 --- !u!23 &1478754500
